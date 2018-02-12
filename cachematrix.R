@@ -1,41 +1,45 @@
 ## Programming Assignment 2 for Reinoud Horstink - reinoud.horstink@arcadis.com
 ## Data science course, Programming R (week 3)
 
-makeCacheMatrix <- function(x = matrix()) {
+makeCacheMatrix <- function(x = matrix()) { 
 
 	## This function creates a special "matrix" object that can cache its inverse
 	## Assume that the matrix supplied is always invertible
-	
-	# actually, I've chosen to use a dataframe instead of a matrix
-	# use <<- to bring this cache object to the global environment
 
-	# xser: x serialized (as reference key)
-	# xi:   inverse matrix of x
-	
-	mycachematrix <<- data.frame(xser="a", xi="b")
+	m <- NULL
+	set <- function(y) {
+		# the set function pushes the value of y to x and resets m to NULL if a new matrix is passed 
+		x <<- y
+		m <<- NULL
+	} 
+	get <- function() x
+	# setmatrix is an anonymous function which replaces m with the inverse of m
+	setmatrix <- function(solve) m <<- solve
+	# getmatrix returns m, if it has been cached
+	getmatrix <- function() m
+	# create a makeCacheMatrix object with set, get, setmatrix, and getmatrix attributes 
+	list(set = set, get = get,	
+			setmatrix = setmatrix, 
+			getmatrix = getmatrix)
 
 }
 
-
-cacheSolve <- function(x, ...) {
+cacheSolve <- function(x, ...) { 
 
 	## Return a matrix that is the inverse of 'x'
 	## If the inverse has already been calculated (and the matrix has not changed), then the cacheSolve should retrieve the inverse from the cache.
-	## xi: inverse of matrix x
 
-	# serialize the original matrix as unique key for looking up the inverse
-	xser <- serialize(x, NULL)
+	# retrieve and return the cached matrix if available
+	m <- x$getmatrix()
+	if(!is.null(m)) {
+		message("getting cached data")
+		return(m)
+	} 
 
-	if (!is.na(mycachematrix$xser[[xser]])) {
-		# inverse does already exist in cache --> lookup inverse matrix in cache object
-		xi <- mycachematrix$xser[[xser]]
-	} else {
-		# inverse does not yet exist in cache --> compute inverse matrix now and store it in mycachematrix
-		xi <- solve(x, ...)
-		mycachematrix[[xser]] <<- xi
-	}
-	
-	# return inverse matrix
-	xi
+	# calculate the inverse and return this inverse matrix
+	data <- x$get()
+	m <- solve(data, ...)
+	x$setmatrix(m)
+	m
 
 }
